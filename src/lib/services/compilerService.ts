@@ -88,45 +88,31 @@ export class CompilerService {
   private async compileReact(files: Record<string, ProjectFile>): Promise<CompileResult> {
     try {
       const htmlFile = files['index.html'];
-      const cssFile = files['style.css'];
-      const jsFile = files['script.js'];
+      if (!htmlFile) throw new Error('index.html is required');
 
-      if (!htmlFile || !jsFile) {
-        throw new Error('index.html and script.js are required');
-      }
+      const cssFile = Object.values(files).find(f => f.name.endsWith('.css'));
+      const jsxFile = Object.values(files).find(f => f.name.endsWith('.jsx') || f.name.endsWith('.tsx') || f.name.endsWith('.js'));
+      if (!jsxFile) throw new Error('No React entry file found');
 
-      // Check if we need server-side compilation
-      if (this.needsServerCompilation(jsFile.content, 'react')) {
+      if (this.needsServerCompilation(jsxFile.content, 'react')) {
         return await this.serverCompile('react', files);
       }
 
-      // Client-side compilation with Babel
       let html = htmlFile.content;
-
-      // Inject CSS
       if (cssFile) {
-        html = html.replace(
-          '<link rel="stylesheet" href="style.css">',
-          `<style>${cssFile.content}</style>`
-        );
+        html = html.replace('<link rel="stylesheet" href="style.css">', `<style>${cssFile.content}</style>`);
       }
 
-      // For React, we keep the Babel transformation on the client
-      html = html.replace(
-        '<script type="text/babel" src="script.js"></script>',
-        `<script type="text/babel">${jsFile.content}</script>`
-      );
+      const code = this.transformWithBabel(jsxFile.content, ['react']);
+      html = html.replace(`<script type="module" src="${jsxFile.name}"></script>`, `<script>${code}</script>`);
 
-      return {
-        success: true,
-        html,
-      };
+      return { success: true, html };
     } catch (error) {
       return {
         success: false,
         error: {
           message: error instanceof Error ? error.message : 'React compilation failed',
-          file: 'script.js',
+          file: 'index.html',
         },
       };
     }
@@ -135,40 +121,44 @@ export class CompilerService {
   private async compileVue(files: Record<string, ProjectFile>): Promise<CompileResult> {
     try {
       const htmlFile = files['index.html'];
-      const cssFile = files['style.css'];
-      const jsFile = files['script.js'];
+      if (!htmlFile) throw new Error('index.html is required');
 
-      if (!htmlFile || !jsFile) {
-        throw new Error('index.html and script.js are required');
+      const cssFile = Object.values(files).find(f => f.name.endsWith('.css'));
+      const vueFile = Object.values(files).find(f => f.name.endsWith('.vue'));
+      const jsFile = Object.values(files).find(f => f.name.endsWith('.js'));
+
+      if (!vueFile && !jsFile) throw new Error('No Vue entry file found');
+
+      if (vueFile && this.needsServerCompilation(vueFile.content, 'vue')) {
+        return await this.serverCompile('vue', files);
       }
 
-      // Vue can be compiled on client-side for simple cases
       let html = htmlFile.content;
-
-      // Inject CSS
       if (cssFile) {
-        html = html.replace(
-          '<link rel="stylesheet" href="style.css">',
-          `<style>${cssFile.content}</style>`
-        );
+        html = html.replace('<link rel="stylesheet" href="style.css">', `<style>${cssFile.content}</style>`);
       }
 
-      // Inject JavaScript
-      html = html.replace(
-        '<script src="script.js"></script>',
-        `<script>${jsFile.content}</script>`
-      );
+      let code = '';
+      if (vueFile) {
+        const templateMatch = vueFile.content.match(/<template>([\s\S]*?)<\/template>/);
+        const scriptMatch = vueFile.content.match(/<script[^>]*>([\s\S]*?)<\/script>/);
+        const template = templateMatch ? templateMatch[1].trim().replace(/`/g, '\\`') : '';
+        let script = scriptMatch ? scriptMatch[1].trim() : 'export default {}';
+        script = script.replace('export default', 'const App =');
+        code = `${script}\nApp.template=\`${template}\`;\nVue.createApp(App).mount('#app');`;
+      } else if (jsFile) {
+        code = jsFile.content;
+      }
 
-      return {
-        success: true,
-        html,
-      };
+      html = html.replace(`<script src="${vueFile ? vueFile.name : jsFile!.name}"></script>`, `<script>${code}</script>`);
+
+      return { success: true, html };
     } catch (error) {
       return {
         success: false,
         error: {
           message: error instanceof Error ? error.message : 'Vue compilation failed',
-          file: 'script.js',
+          file: 'index.html',
         },
       };
     }
@@ -176,48 +166,42 @@ export class CompilerService {
 
   private async compileSvelte(files: Record<string, ProjectFile>): Promise<CompileResult> {
     try {
-      // Svelte always needs server-side compilation for real .svelte files
-      // For demo purposes, we'll use the simulated approach
       const htmlFile = files['index.html'];
-      const cssFile = files['style.css'];
-      const jsFile = files['script.js'];
+      if (!htmlFile) throw new Error('index.html is required');
 
-      if (!htmlFile || !jsFile) {
-        throw new Error('index.html and script.js are required');
-      }
+      const cssFile = Object.values(files).find(f => f.name.endsWith('.css'));
+      const svelteFile = Object.values(files).find(f => f.name.endsWith('.svelte'));
+      const jsFile = Object.values(files).find(f => f.name.endsWith('.js'));
 
-      // Check if this needs real Svelte compilation
-      if (this.needsServerCompilation(jsFile.content, 'svelte')) {
+      if (!svelteFile && !jsFile) throw new Error('No Svelte entry file found');
+
+      if (svelteFile && this.needsServerCompilation(svelteFile.content, 'svelte')) {
         return await this.serverCompile('svelte', files);
       }
 
-      // Use simulated Svelte approach
       let html = htmlFile.content;
-
-      // Inject CSS
       if (cssFile) {
-        html = html.replace(
-          '<link rel="stylesheet" href="style.css">',
-          `<style>${cssFile.content}</style>`
-        );
+        html = html.replace('<link rel="stylesheet" href="style.css">', `<style>${cssFile.content}</style>`);
       }
 
-      // Inject JavaScript
-      html = html.replace(
-        '<script src="script.js"></script>',
-        `<script>${jsFile.content}</script>`
-      );
+      let code = '';
+      if (svelteFile) {
+        const { compile } = await import('svelte/compiler');
+        const compiled = compile(svelteFile.content, { format: 'esm' });
+        code = `${compiled.js.code}\nconst app = new App({ target: document.getElementById('app') });`;
+      } else if (jsFile) {
+        code = jsFile.content;
+      }
 
-      return {
-        success: true,
-        html,
-      };
+      html = html.replace(`<script src="${svelteFile ? 'main.js' : jsFile!.name}"></script>`, `<script>${code}</script>`);
+
+      return { success: true, html };
     } catch (error) {
       return {
         success: false,
         error: {
           message: error instanceof Error ? error.message : 'Svelte compilation failed',
-          file: 'script.js',
+          file: 'index.html',
         },
       };
     }
@@ -311,16 +295,16 @@ export class CompilerService {
       errors.push('index.html is required');
     }
 
-    if (framework === 'react' && !files['script.js']) {
-      errors.push('script.js is required for React projects');
+    if (framework === 'react' && !Object.keys(files).some(f => f.endsWith('.jsx') || f.endsWith('.js'))) {
+      errors.push('A .jsx or .js file is required for React projects');
     }
 
-    if (framework === 'vue' && !files['script.js']) {
-      errors.push('script.js is required for Vue projects');
+    if (framework === 'vue' && !Object.keys(files).some(f => f.endsWith('.vue') || f.endsWith('.js'))) {
+      errors.push('A .vue or .js file is required for Vue projects');
     }
 
-    if (framework === 'svelte' && !files['script.js']) {
-      errors.push('script.js is required for Svelte projects');
+    if (framework === 'svelte' && !Object.keys(files).some(f => f.endsWith('.svelte') || f.endsWith('.js'))) {
+      errors.push('A .svelte or .js file is required for Svelte projects');
     }
 
     return errors;
