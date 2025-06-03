@@ -1,6 +1,6 @@
 // src/lib/stores/projectStore.ts
 import { create } from 'zustand';
-import { Project, ProjectFile, FrameworkType, ProjectStore } from '../types';
+import { Project, ProjectFile, FrameworkType, ProjectStore, Template } from '../types';
 
 export const useProjectStore = create<ProjectStore>((set, get) => ({
   currentProject: null,
@@ -8,11 +8,12 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   isLoading: false,
   error: null,
 
-  createProject: async (framework: FrameworkType) => {
+  createProject: async (framework: FrameworkType, template?: Template) => {
     set({ isLoading: true, error: null });
 
     try {
-      // Ya no usamos getTemplateByFramework, inicializamos con un proyecto "vacío"
+      // If a template with files is provided (e.g. from AI generation), use it
+      // otherwise start with an empty project
       const emptyFiles: Record<string, ProjectFile> = {
         'index.html': {
           name: 'index.html',
@@ -45,15 +46,16 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         },
       };
 
+      const files = template?.files ? template.files : emptyFiles;
       const newProject: Project = {
-        id: `project_${Date.now()}`,
-        name: `Nuevo proyecto (${framework})`,
+        id: template?.id || `project_${Date.now()}`,
+        name: template?.name || `Nuevo proyecto (${framework})`,
         framework,
-        files: emptyFiles,
+        files,
         activeFile: 'index.html',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        description: '',
+        description: template?.description || '',
         isPublic: false,
       };
 
