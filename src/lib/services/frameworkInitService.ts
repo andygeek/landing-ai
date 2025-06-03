@@ -1,6 +1,7 @@
 import { mkdtempSync, writeFileSync, readdirSync, mkdirSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import { execSync } from 'child_process';
 import { FrameworkType } from '../types';
 
 export interface InitResult {
@@ -28,9 +29,46 @@ function listFiles(dir: string, base = dir): string[] {
 
 export function initFrameworkProject(framework: FrameworkType): InitResult {
   const dir = mkdtempSync(join(tmpdir(), `landing-${framework}-`));
-  switch (framework) {
-    case 'react':
-      writeFile(dir, 'index.html', `<!DOCTYPE html>
+
+  const scaffoldWithCli = () => {
+    try {
+      switch (framework) {
+        case 'react':
+          execSync('npm create vite@latest . -- --template react', {
+            cwd: dir,
+            stdio: 'ignore',
+          });
+          return true;
+        case 'vue':
+          execSync('npm create vue@latest . -- --default', {
+            cwd: dir,
+            stdio: 'ignore',
+          });
+          return true;
+        case 'svelte':
+          execSync('npm create vite@latest . -- --template svelte', {
+            cwd: dir,
+            stdio: 'ignore',
+          });
+          return true;
+        default:
+          return false;
+      }
+    } catch (e) {
+      console.error(`CLI init failed for ${framework}:`, e);
+      return false;
+    }
+  };
+
+  const cliSuccess = scaffoldWithCli();
+
+  if (!cliSuccess) {
+    switch (framework) {
+      case 'react':
+        writeFile(
+          dir,
+          'index.html',
+          `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -41,20 +79,32 @@ export function initFrameworkProject(framework: FrameworkType): InitResult {
   <div id="root"></div>
   <script type="module" src="main.jsx"></script>
 </body>
-</html>`);
-      writeFile(dir, 'main.jsx', `import React from 'react';
+</html>`
+        );
+        writeFile(
+          dir,
+          'main.jsx',
+          `import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import './style.css';
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);`);
-      writeFile(dir, 'App.jsx', `export default function App() {
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);`
+        );
+        writeFile(
+          dir,
+          'App.jsx',
+          `export default function App() {
   return <h1>Hello React</h1>;
-}`);
-      writeFile(dir, 'style.css', ``);
-      break;
-    case 'vue':
-      writeFile(dir, 'index.html', `<!DOCTYPE html>
+}`
+        );
+        writeFile(dir, 'style.css', ``);
+        break;
+      case 'vue':
+        writeFile(
+          dir,
+          'index.html',
+          `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -65,24 +115,36 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);`);
   <div id="app"></div>
   <script type="module" src="main.js"></script>
 </body>
-</html>`);
-      writeFile(dir, 'main.js', `import { createApp } from 'vue';
+</html>`
+        );
+        writeFile(
+          dir,
+          'main.js',
+          `import { createApp } from 'vue';
 import App from './App.vue';
 import './style.css';
 
-createApp(App).mount('#app');`);
-      writeFile(dir, 'App.vue', `<template>
+createApp(App).mount('#app');`
+        );
+        writeFile(
+          dir,
+          'App.vue',
+          `<template>
   <h1>Hello Vue</h1>
 </template>
 <script>
 export default { name: 'App' }
 </script>
 <style>
-</style>`);
-      writeFile(dir, 'style.css', ``);
-      break;
-    case 'svelte':
-      writeFile(dir, 'index.html', `<!DOCTYPE html>
+</style>`
+        );
+        writeFile(dir, 'style.css', ``);
+        break;
+      case 'svelte':
+        writeFile(
+          dir,
+          'index.html',
+          `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -93,12 +155,20 @@ export default { name: 'App' }
   <div id="app"></div>
   <script type="module" src="main.js"></script>
 </body>
-</html>`);
-      writeFile(dir, 'main.js', `import App from './App.svelte';
+</html>`
+        );
+        writeFile(
+          dir,
+          'main.js',
+          `import App from './App.svelte';
 import './style.css';
 const app = new App({ target: document.getElementById('app') });
-export default app;`);
-      writeFile(dir, 'App.svelte', `<script>
+export default app;`
+        );
+        writeFile(
+          dir,
+          'App.svelte',
+          `<script>
   export let name = 'world';
 </script>
 
@@ -107,11 +177,15 @@ export default app;`);
 </main>
 
 <style>
-</style>`);
-      writeFile(dir, 'style.css', ``);
-      break;
-    default:
-      writeFile(dir, 'index.html', `<!DOCTYPE html>
+</style>`
+        );
+        writeFile(dir, 'style.css', ``);
+        break;
+      default:
+        writeFile(
+          dir,
+          'index.html',
+          `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -123,11 +197,14 @@ export default app;`);
   <div id="app"></div>
   <script src="script.js"></script>
 </body>
-</html>`);
-      writeFile(dir, 'script.js', ``);
-      writeFile(dir, 'style.css', ``);
-      break;
+</html>`
+        );
+        writeFile(dir, 'script.js', ``);
+        writeFile(dir, 'style.css', ``);
+        break;
+    }
   }
+
   return { dir, files: listFiles(dir) };
 }
 
