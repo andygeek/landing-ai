@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { APP_VERSION } from '@/lib/version';
 import { ChevronRight, Sparkles, Brain, ArrowRight, Key, Eye, EyeOff } from 'lucide-react';
 import { FrameworkType } from '@/lib/types';
 import { useProjectStore } from '@/lib/stores/projectStore';
@@ -153,7 +154,10 @@ export default function OnboardingPage() {
             <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
               <span className="text-white font-bold text-lg">LA</span>
             </div>
-            <h1 className="text-2xl font-bold text-white">LandingAI</h1>
+            <h1 className="text-2xl font-bold text-white">
+              LandingAI
+              <span className="ml-2 text-sm font-normal text-gray-400">v{APP_VERSION}</span>
+            </h1>
           </div>
         </div>
       </header>

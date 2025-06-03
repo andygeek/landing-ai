@@ -6,6 +6,7 @@ import { Button } from '../ui/Button';
 import { useProjectStore } from '@/lib/stores/projectStore';
 import { useEditorStore } from '@/lib/stores/editorStore';
 import { useRouter } from 'next/navigation';
+import { APP_VERSION } from '@/lib/version';
 
 export function Header() {
   const router = useRouter();
@@ -88,7 +89,10 @@ export function Header() {
             <div className="h-8 w-8 rounded-md bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-sm">LA</span>
             </div>
-            <h1 className="text-lg font-semibold">LandingAI</h1>
+            <h1 className="text-lg font-semibold">
+              LandingAI
+              <span className="ml-2 text-xs font-normal text-muted-foreground">v{APP_VERSION}</span>
+            </h1>
           </div>
           
           {currentProject && (
