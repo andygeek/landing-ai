@@ -46,8 +46,10 @@ export class AIService {
   }
 
   async generateLandingPage(
-    framework: FrameworkType, 
-    prompt: string
+    framework: FrameworkType,
+    prompt: string,
+    model: string,
+    company: string
   ): Promise<AIGenerationResponse> {
     try {
       const response = await fetch('/api/generate', {
@@ -59,6 +61,8 @@ export class AIService {
           framework,
           prompt,
           apiKey: this.apiKey,
+          model,
+          company,
         }),
       });
 
