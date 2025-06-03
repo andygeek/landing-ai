@@ -1,4 +1,10 @@
-import { FrameworkType, ProjectFile, AIGenerationRequest, AIGenerationResponse } from '../types';
+import { FrameworkType, ProjectFile } from '../types';
+
+export interface AIGenerationResponse {
+  success: boolean;
+  files?: Record<string, string>;
+  error?: string;
+}
 
 export class AIService {
   private static instance: AIService;
@@ -13,7 +19,6 @@ export class AIService {
 
   setApiKey(apiKey: string) {
     this.apiKey = apiKey;
-    // Store in localStorage for persistence
     if (typeof window !== 'undefined') {
       localStorage.setItem('openai_api_key', apiKey);
     }
@@ -22,7 +27,6 @@ export class AIService {
   getApiKey(): string | null {
     if (this.apiKey) return this.apiKey;
     
-    // Try to get from localStorage
     if (typeof window !== 'undefined') {
       const storedKey = localStorage.getItem('openai_api_key');
       if (storedKey) {
@@ -55,7 +59,7 @@ export class AIService {
           framework,
           prompt,
           apiKey: this.apiKey,
-        } as AIGenerationRequest),
+        }),
       });
 
       const result = await response.json();

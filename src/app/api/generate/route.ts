@@ -1,17 +1,13 @@
-// ===== 1. Create API Route: /src/app/api/generate/route.ts =====
+// src/app/api/generate/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { FrameworkType } from '@/lib/types';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { framework, prompt, apiKey }: { 
-      framework: FrameworkType; 
+    const { framework, prompt, apiKey }: {
+      framework: FrameworkType;
       prompt: string;
       apiKey?: string;
     } = body;
@@ -23,17 +19,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const activeApiKey = apiKey || process.env.OPENAI_API_KEY;
-    
+    // Si ni el .env ni el payload traen la clave, devolvemos 400
+    const activeApiKey = apiKey?.trim();
     if (!activeApiKey) {
       return NextResponse.json(
-        { success: false, error: 'OpenAI API key is required' },
+        { success: false, error: 'OpenAI API key is required in the request body' },
         { status: 400 }
       );
     }
 
-    const openaiClient = apiKey ? new OpenAI({ apiKey }) : openai;
+    // Instanciamos el cliente de OpenAI **AQUÍ**, usando la clave recibida
+    const openaiClient = new OpenAI({ apiKey: activeApiKey });
 
+    // Definimos el prompt del sistema
     const systemPrompt = `You are a code assistant that generates landing page files. Generate the files for a landing page based on the user's requirements using the ${framework} framework. 
 
 Return ONLY a valid JSON object in this exact format:
@@ -51,6 +49,7 @@ Framework-specific requirements:
 
 Make the landing page modern, responsive, and professional.`;
 
+    // Llamamos a la API de OpenAI
     const completion = await openaiClient.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -63,7 +62,6 @@ Make the landing page modern, responsive, and professional.`;
     });
 
     const generatedFiles = JSON.parse(completion.choices[0].message.content || '{}');
-
     if (!generatedFiles['index.html']) {
       throw new Error('Generated files must include index.html');
     }
@@ -83,126 +81,3 @@ Make the landing page modern, responsive, and professional.`;
     );
   }
 }
-
-// ===== 2. Create AI Service: /src/lib/services/aiService.ts =====
-import { FrameworkType, ProjectFile } from '../types';
-
-export interface AIGenerationResponse {
-  success: boolean;
-  files?: Record<string, string>;
-  error?: string;
-}
-
-export class AIService {
-  private static instance: AIService;
-  private apiKey: string | null = null;
-
-  static getInstance(): AIService {
-    if (!AIService.instance) {
-      AIService.instance = new AIService();
-    }
-    return AIService.instance;
-  }
-
-  setApiKey(apiKey: string) {
-    this.apiKey = apiKey;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('openai_api_key', apiKey);
-    }
-  }
-
-  getApiKey(): string | null {
-    if (this.apiKey) return this.apiKey;
-    
-    if (typeof window !== 'undefined') {
-      const storedKey = localStorage.getItem('openai_api_key');
-      if (storedKey) {
-        this.apiKey = storedKey;
-        return storedKey;
-      }
-    }
-    
-    return null;
-  }
-
-  clearApiKey() {
-    this.apiKey = null;
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('openai_api_key');
-    }
-  }
-
-  async generateLandingPage(
-    framework: FrameworkType, 
-    prompt: string
-  ): Promise<AIGenerationResponse> {
-    try {
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          framework,
-          prompt,
-          apiKey: this.apiKey,
-        }),
-      });
-
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to generate landing page');
-      }
-
-      return result;
-    } catch (error) {
-      console.error('AI generation error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to generate landing page',
-      };
-    }
-  }
-
-  convertToProjectFiles(generatedFiles: Record<string, string>): Record<string, ProjectFile> {
-    const projectFiles: Record<string, ProjectFile> = {};
-    
-    const fileTypeMap: Record<string, ProjectFile['type']> = {
-      'html': 'html',
-      'css': 'css',
-      'js': 'js',
-      'jsx': 'jsx',
-      'vue': 'vue',
-      'svelte': 'svelte',
-    };
-
-    for (const [filename, content] of Object.entries(generatedFiles)) {
-      const extension = filename.split('.').pop() || '';
-      const type = fileTypeMap[extension] || 'js';
-      
-      projectFiles[filename] = {
-        name: filename,
-        content,
-        type,
-        icon: this.getFileIcon(extension),
-      };
-    }
-
-    return projectFiles;
-  }
-
-  private getFileIcon(extension: string): string {
-    const iconMap: Record<string, string> = {
-      'html': '📄',
-      'css': '🎨',
-      'js': '⚡',
-      'jsx': '⚛️',
-      'vue': '💚',
-      'svelte': '🔥',
-    };
-    return iconMap[extension] || '📄';
-  }
-}
-
-export const aiService = AIService.getInstance();
