@@ -10,7 +10,7 @@ import { useProjectStore } from '@/lib/stores/projectStore';
 import { useEditorStore } from '@/lib/stores/editorStore';
 import { compilerService } from '@/lib/services/compilerService';
 
-// Improved split pane implementation
+// Simple split pane implementation
 interface SplitPaneProps {
   left: React.ReactNode;
   right: React.ReactNode;
@@ -21,10 +21,8 @@ interface SplitPaneProps {
 function SplitPane({ left, right, defaultSplit = 50, minSize = 200 }: SplitPaneProps) {
   const [split, setSplit] = useState(defaultSplit);
   const [isDragging, setIsDragging] = useState(false);
-  const [containerWidth, setContainerWidth] = useState(0);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleMouseDown = () => {
     setIsDragging(true);
   };
 
@@ -37,11 +35,7 @@ function SplitPane({ left, right, defaultSplit = 50, minSize = 200 }: SplitPaneP
     const rect = container.getBoundingClientRect();
     const newSplit = ((e.clientX - rect.left) / rect.width) * 100;
     
-    // Calculate minimum percentage based on container width
-    const minPercent = (minSize / rect.width) * 100;
-    const maxPercent = 100 - minPercent;
-    
-    if (newSplit >= minPercent && newSplit <= maxPercent) {
+    if (newSplit >= (minSize / rect.width) * 100 && newSplit <= 100 - (minSize / rect.width) * 100) {
       setSplit(newSplit);
     }
   };
@@ -49,22 +43,6 @@ function SplitPane({ left, right, defaultSplit = 50, minSize = 200 }: SplitPaneP
   const handleMouseUp = () => {
     setIsDragging(false);
   };
-
-  // Update container width on resize
-  useEffect(() => {
-    const container = document.getElementById('split-container');
-    if (!container) return;
-
-    const updateWidth = () => {
-      setContainerWidth(container.getBoundingClientRect().width);
-    };
-
-    const resizeObserver = new ResizeObserver(updateWidth);
-    resizeObserver.observe(container);
-    updateWidth(); // Initial measurement
-
-    return () => resizeObserver.disconnect();
-  }, []);
 
   useEffect(() => {
     if (isDragging) {
@@ -83,24 +61,15 @@ function SplitPane({ left, right, defaultSplit = 50, minSize = 200 }: SplitPaneP
   }, [isDragging]);
 
   return (
-    <div id="split-container" className="flex h-full w-full">
-      <div 
-        style={{ width: `${split}%` }} 
-        className="flex min-w-0"
-      >
+    <div id="split-container" className="flex h-full">
+      <div style={{ width: `${split}%` }} className="flex">
         {left}
       </div>
       <div
-        className="w-1 bg-gray-300 hover:bg-blue-500 cursor-col-resize transition-colors flex-shrink-0 relative"
+        className="w-1 bg-border hover:bg-primary/50 cursor-col-resize transition-colors"
         onMouseDown={handleMouseDown}
-      >
-        {/* Visual indicator for the handle */}
-        <div className="absolute inset-y-0 left-1/2 transform -translate-x-1/2 w-1 bg-current opacity-50" />
-      </div>
-      <div 
-        style={{ width: `${100 - split}%` }} 
-        className="flex min-w-0"
-      >
+      />
+      <div style={{ width: `${100 - split}%` }} className="flex">
         {right}
       </div>
     </div>
@@ -127,19 +96,19 @@ export default function EditorPage() {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col bg-gray-900">
+    <div className="h-screen flex flex-col bg-background">
       <Header />
       
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0">
         <SplitPane
           left={
-            <div className="flex h-full w-full min-w-0">
+            <div className="flex h-full">
               <FileExplorer />
               <CodeEditor />
             </div>
           }
           right={
-            <div className="flex flex-col h-full w-full min-w-0">
+            <div className="flex flex-col h-full">
               <PreviewFrame />
               <Console
                 isCollapsed={isConsoleCollapsed}
@@ -147,7 +116,7 @@ export default function EditorPage() {
               />
             </div>
           }
-          defaultSplit={60} // 60% for left panel (editor), 40% for right panel (preview)
+          defaultSplit={50}
           minSize={300}
         />
       </div>
