@@ -52,7 +52,7 @@ Make the landing page modern, responsive, and professional.`;
     if (company === 'google') {
       const genAI = new GoogleGenAI({ apiKey: activeApiKey });
       const config = {
-        responseMimeType: 'text/plain',
+        responseMimeType: 'application/json',
         systemInstruction: [{ text: systemPrompt }],
       };
       const contents = [

@@ -74,15 +74,15 @@ const aiCompanies = [
     icon: <Building2 className="w-5 h-5" />,
     models: [
       {
-        id: 'gemini-2.5-pro',
-        name: 'Gemini 2.5 Pro',
+        id: 'gemini-2.5-pro-preview-05-06',
+        name: 'Gemini 2.5 Pro Preview (05/06)',
         icon: <Brain className="w-5 h-5" />,
         description: "Google's latest AI model",
         color: 'from-blue-500 to-cyan-600',
       },
       {
-        id: 'gemini-2.5-flash',
-        name: 'Gemini 2.5 Flash',
+        id: 'gemini-2.5-flash-preview-05-20',
+        name: 'Gemini 2.5 Flash Preview (05/20)',
         icon: <Brain className="w-5 h-5" />,
         description: 'Faster lightweight Gemini model',
         color: 'from-blue-400 to-cyan-500',
