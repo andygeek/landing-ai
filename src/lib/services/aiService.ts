@@ -20,7 +20,7 @@ export class AIService {
   setApiKey(apiKey: string) {
     this.apiKey = apiKey;
     if (typeof window !== 'undefined') {
-      localStorage.setItem('openai_api_key', apiKey);
+      localStorage.setItem('ai_api_key', apiKey);
     }
   }
 
@@ -28,7 +28,7 @@ export class AIService {
     if (this.apiKey) return this.apiKey;
     
     if (typeof window !== 'undefined') {
-      const storedKey = localStorage.getItem('openai_api_key');
+      const storedKey = localStorage.getItem('ai_api_key');
       if (storedKey) {
         this.apiKey = storedKey;
         return storedKey;
@@ -41,13 +41,15 @@ export class AIService {
   clearApiKey() {
     this.apiKey = null;
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('openai_api_key');
+      localStorage.removeItem('ai_api_key');
     }
   }
 
   async generateLandingPage(
-    framework: FrameworkType, 
-    prompt: string
+    framework: FrameworkType,
+    prompt: string,
+    model: string,
+    company: string
   ): Promise<AIGenerationResponse> {
     try {
       const response = await fetch('/api/generate', {
@@ -59,6 +61,8 @@ export class AIService {
           framework,
           prompt,
           apiKey: this.apiKey,
+          model,
+          company,
         }),
       });
 

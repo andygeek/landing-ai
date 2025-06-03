@@ -44,3 +44,12 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Using Google Gemini
+
+To generate landing pages with Google's Gemini models you need an API key from [Google AI Studio](https://aistudio.google.com/apikey). When prompted on the onboarding page:
+
+1. Select **Google** as the company.
+2. Paste your Gemini API key in the API key field.
+
+No additional environment variables are required when using the `@google/genai` SDK.
