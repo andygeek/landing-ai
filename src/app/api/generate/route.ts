@@ -1,7 +1,7 @@
 // src/app/api/generate/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { VertexAI } from '@google-cloud/vertexai';
 import { FrameworkType } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
@@ -50,12 +50,18 @@ Make the landing page modern, responsive, and professional.`;
 
     let generatedFiles: Record<string, string> = {};
     if (company === 'google') {
-      const genAI = new GoogleGenerativeAI(activeApiKey);
-      const modelClient = genAI.getGenerativeModel({ model: model || 'gemini-2.5-pro' });
-      const geminiResult = await modelClient.generateContent([
-        { role: 'system', parts: [{ text: systemPrompt }] },
-        { role: 'user', parts: [{ text: `Create a landing page for: ${prompt}` }] }
-      ]);
+      const vertex = new VertexAI({
+        project: process.env.GOOGLE_CLOUD_PROJECT || 'dummy-project',
+        location: process.env.GOOGLE_CLOUD_REGION || 'us-central1',
+        googleAuthOptions: { apiKey: activeApiKey },
+      });
+      const modelClient = vertex.getGenerativeModel({ model: model || 'gemini-2.5-pro' });
+      const geminiResult = await modelClient.generateContent({
+        contents: [
+          { role: 'system', parts: [{ text: systemPrompt }] },
+          { role: 'user', parts: [{ text: `Create a landing page for: ${prompt}` }] },
+        ],
+      });
       const text = geminiResult.response.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
       generatedFiles = JSON.parse(text);
     } else {

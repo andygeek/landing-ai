@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@babel/standalone": "^7.27.4",
-    "@google/generative-ai": "^0.24.1",
+    "@google-cloud/vertexai": "^1.10.0",
     "@monaco-editor/react": "^4.7.0",
     "@vue/compiler-sfc": "^3.5.16",
     "clsx": "^2.1.1",
