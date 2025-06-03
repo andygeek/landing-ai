@@ -51,12 +51,20 @@ Make the landing page modern, responsive, and professional.`;
     let generatedFiles: Record<string, string> = {};
     if (company === 'google') {
       const genAI = new GoogleGenAI({ apiKey: activeApiKey });
+      const config = {
+        responseMimeType: 'text/plain',
+        systemInstruction: [{ text: systemPrompt }],
+      };
+      const contents = [
+        {
+          role: 'user',
+          parts: [{ text: `Create a landing page for: ${prompt}` }],
+        },
+      ];
       const geminiResult = await genAI.models.generateContent({
         model: model || 'gemini-2.5-pro',
-        contents: [
-          { role: 'system', parts: [{ text: systemPrompt }] },
-          { role: 'user', parts: [{ text: `Create a landing page for: ${prompt}` }] },
-        ],
+        contents,
+        config,
       });
       const text = geminiResult.text || '{}';
       generatedFiles = JSON.parse(text);
