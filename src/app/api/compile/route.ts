@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ProjectFile, FrameworkType } from '@/lib/types';
+import * as Babel from '@babel/standalone';
 
 export async function POST(request: NextRequest) {
   try {
@@ -45,7 +46,6 @@ export async function POST(request: NextRequest) {
 async function compileReact(files: Record<string, ProjectFile>) {
   try {
     // For React, we can use Babel to transform JSX
-    const Babel = require('@babel/standalone');
     
     const htmlFile = files['index.html'];
     const cssFile = files['style.css'];
@@ -75,7 +75,7 @@ async function compileReact(files: Record<string, ProjectFile>) {
         '<script type="text/babel" src="script.js"></script>',
         `<script>${transformedCode}</script>`
       );
-    } catch (babelError) {
+    } catch {
       // Fallback to untransformed code
       html = html.replace(
         '<script type="text/babel" src="script.js"></script>',

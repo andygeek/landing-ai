@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FileText, Folder, Plus, Trash2, Edit3, X, Check } from 'lucide-react';
+import { FileText, Folder, Plus, Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { useProjectStore } from '@/lib/stores/projectStore';
 import { useEditorStore } from '@/lib/stores/editorStore';
@@ -31,12 +31,11 @@ function getFileIconAndColor(filename: string) {
 }
 
 export function FileExplorer() {
-  const { 
-    currentProject, 
-    setActiveFile: setProjectActiveFile, 
-    addFile, 
+  const {
+    currentProject,
+    setActiveFile: setProjectActiveFile,
+    addFile,
     deleteFile,
-    updateFile // Needed for renaming if we implement it
   } = useProjectStore();
   
   const { 
@@ -214,7 +213,7 @@ export function FileExplorer() {
       <div className="flex-1 overflow-y-auto custom-scrollbar p-1.5 space-y-0.5">
         {sortedFileNames.length === 0 && !isAddingFile && (
           <div className="text-center text-xs text-muted-foreground py-4 px-2">
-            This project has no files yet. Click '+' to add one.
+            This project has no files yet. Click &apos;+&apos; to add one.
           </div>
         )}
         {sortedFileNames.map((filename) => {

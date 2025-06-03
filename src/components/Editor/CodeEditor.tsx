@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import Editor, { Monaco } from '@monaco-editor/react';
+import type * as monacoEditor from 'monaco-editor';
 import { useProjectStore } from '@/lib/stores/projectStore';
 import { useEditorStore } from '@/lib/stores/editorStore';
 
@@ -22,7 +23,7 @@ function getLanguage(filename: string): string {
 }
 
 export function CodeEditor() {
-  const editorRef = useRef<any>(null);
+  const editorRef = useRef<monacoEditor.editor.IStandaloneCodeEditor | null>(null);
   const { currentProject, updateFile } = useProjectStore();
   const { addConsoleMessage } = useEditorStore();
 
@@ -46,7 +47,10 @@ export function CodeEditor() {
     }
   }, [currentProject?.id]);
 
-  const handleEditorDidMount = (editor: any, monaco: Monaco) => {
+  const handleEditorDidMount = (
+    editor: monacoEditor.editor.IStandaloneCodeEditor,
+    monaco: Monaco
+  ) => {
     editorRef.current = editor;
     
     // Configure Monaco Editor

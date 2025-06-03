@@ -78,7 +78,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       e => e.file === error.file && e.line === error.line && e.column === error.column
     );
 
-    let errors = [...editorState.errors];
+    const errors = [...editorState.errors];
     if (existingErrorIndex >= 0) {
       errors[existingErrorIndex] = error;
     } else {

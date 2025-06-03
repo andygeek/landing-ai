@@ -8,7 +8,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   isLoading: false,
   error: null,
 
-  createProject: async (framework: FrameworkType, template) => {
+  createProject: async (framework: FrameworkType) => {
     set({ isLoading: true, error: null });
 
     try {
