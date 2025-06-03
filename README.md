@@ -1,3 +1,15 @@
+---
+title: "Landing AI"
+emoji: "🚀"
+colorFrom: "teal"
+colorTo: "cyan"
+sdk: "static"
+sdk_version: "1.0"
+app_file: "index.html"
+pinned: false
+---
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
