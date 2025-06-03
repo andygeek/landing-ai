@@ -170,3 +170,15 @@ export interface ThemeConfig {
     lineNumber: string;
   };
 }
+
+export interface AIGenerationRequest {
+  framework: FrameworkType;
+  prompt: string;
+  apiKey?: string;
+}
+
+export interface AIGenerationResponse {
+  success: boolean;
+  files?: Record<string, string>;
+  error?: string;
+}

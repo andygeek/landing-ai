@@ -8,6 +8,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   isLoading: false,
   error: null,
 
+
   createProject: async (framework: FrameworkType, template?: Template) => {
     set({ isLoading: true, error: null });
     
@@ -16,7 +17,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
       
       const newProject: Project = {
         id: `project_${Date.now()}`,
-        name: `New ${framework} Project`,
+        name: template?.name || `New ${framework} Project`,
         framework,
         files: selectedTemplate.files,
         activeFile: 'index.html',
