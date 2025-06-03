@@ -28,11 +28,23 @@ export function CodeEditor() {
 
   const currentFile = currentProject?.files[currentProject.activeFile];
 
+  // Update editor content when file changes
+  useEffect(() => {
+    if (editorRef.current && currentFile) {
+      // Force update the editor content when file changes
+      const currentValue = editorRef.current.getValue();
+      if (currentValue !== currentFile.content) {
+        editorRef.current.setValue(currentFile.content);
+      }
+    }
+  }, [currentProject?.activeFile, currentFile?.content]);
+
+  // Also update when switching projects
   useEffect(() => {
     if (editorRef.current && currentFile) {
       editorRef.current.setValue(currentFile.content);
     }
-  }, [currentProject?.activeFile]);
+  }, [currentProject?.id]);
 
   const handleEditorDidMount = (editor: any, monaco: Monaco) => {
     editorRef.current = editor;
@@ -74,7 +86,10 @@ export function CodeEditor() {
     editor.onDidChangeModelContent(() => {
       if (currentProject && currentFile) {
         const value = editor.getValue();
-        updateFile(currentProject.activeFile, value);
+        // Avoid infinite loops by checking if content actually changed
+        if (value !== currentFile.content) {
+          updateFile(currentProject.activeFile, value);
+        }
       }
     });
   };
@@ -104,6 +119,7 @@ export function CodeEditor() {
       {/* Editor */}
       <div className="flex-1">
         <Editor
+          key={`${currentProject.id}-${currentProject.activeFile}`} // Force remount on file change
           height="100%"
           language={getLanguage(currentProject.activeFile)}
           value={currentFile.content}
