@@ -1,8 +1,8 @@
 ---
 title: "Landing AI"
 emoji: "🚀"
-colorFrom: "teal"
-colorTo: "cyan"
+colorFrom: "yellow"
+colorTo: "yellow"
 sdk: "static"
 sdk_version: "1.0"
 app_file: "index.html"
