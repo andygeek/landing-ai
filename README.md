@@ -3,10 +3,8 @@ title: "Landing AI"
 emoji: "🚀"
 colorFrom: "yellow"
 colorTo: "yellow"
-sdk: "static"
-sdk_version: "1.0"
-app_file: "index.html"
-pinned: false
+sdk: "docker"
+app_port: 7860
 ---
 
 
