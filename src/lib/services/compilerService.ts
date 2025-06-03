@@ -2,8 +2,8 @@ import { FrameworkType, ProjectFile, CompileRequest, CompileResult } from '../ty
 
 declare global {
   interface Window {
-    Babel: any;
-    Vue: any;
+    Babel: typeof import('@babel/standalone');
+    Vue: unknown;
   }
 }
 

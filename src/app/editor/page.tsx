@@ -22,7 +22,6 @@ interface SplitPaneProps {
 function SplitPane({ left, right, defaultSplit = 50, minSize = 200 }: SplitPaneProps) {
   const [split, setSplit] = useState(defaultSplit);
   const [isDragging, setIsDragging] = useState(false);
-  const [containerWidth, setContainerWidth] = useState(0);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -51,21 +50,6 @@ function SplitPane({ left, right, defaultSplit = 50, minSize = 200 }: SplitPaneP
     setIsDragging(false);
   };
 
-  // Update container width on resize
-  useEffect(() => {
-    const container = document.getElementById('split-container');
-    if (!container) return;
-
-    const updateWidth = () => {
-      setContainerWidth(container.getBoundingClientRect().width);
-    };
-
-    const resizeObserver = new ResizeObserver(updateWidth);
-    resizeObserver.observe(container);
-    updateWidth(); // Initial measurement
-
-    return () => resizeObserver.disconnect();
-  }, []);
 
   useEffect(() => {
     if (isDragging) {
