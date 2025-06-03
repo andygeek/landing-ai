@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Layout/Header';
 import { FileExplorer } from '@/components/Editor/FileExplorer';
 import { CodeEditor } from '@/components/Editor/CodeEditor';
@@ -10,7 +11,7 @@ import { useProjectStore } from '@/lib/stores/projectStore';
 import { useEditorStore } from '@/lib/stores/editorStore';
 import { compilerService } from '@/lib/services/compilerService';
 
-// Simple split pane implementation
+// Improved split pane implementation
 interface SplitPaneProps {
   left: React.ReactNode;
   right: React.ReactNode;
@@ -21,8 +22,10 @@ interface SplitPaneProps {
 function SplitPane({ left, right, defaultSplit = 50, minSize = 200 }: SplitPaneProps) {
   const [split, setSplit] = useState(defaultSplit);
   const [isDragging, setIsDragging] = useState(false);
+  const [containerWidth, setContainerWidth] = useState(0);
 
-  const handleMouseDown = () => {
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
     setIsDragging(true);
   };
 
@@ -35,7 +38,11 @@ function SplitPane({ left, right, defaultSplit = 50, minSize = 200 }: SplitPaneP
     const rect = container.getBoundingClientRect();
     const newSplit = ((e.clientX - rect.left) / rect.width) * 100;
     
-    if (newSplit >= (minSize / rect.width) * 100 && newSplit <= 100 - (minSize / rect.width) * 100) {
+    // Calculate minimum percentage based on container width
+    const minPercent = (minSize / rect.width) * 100;
+    const maxPercent = 100 - minPercent;
+    
+    if (newSplit >= minPercent && newSplit <= maxPercent) {
       setSplit(newSplit);
     }
   };
@@ -43,6 +50,22 @@ function SplitPane({ left, right, defaultSplit = 50, minSize = 200 }: SplitPaneP
   const handleMouseUp = () => {
     setIsDragging(false);
   };
+
+  // Update container width on resize
+  useEffect(() => {
+    const container = document.getElementById('split-container');
+    if (!container) return;
+
+    const updateWidth = () => {
+      setContainerWidth(container.getBoundingClientRect().width);
+    };
+
+    const resizeObserver = new ResizeObserver(updateWidth);
+    resizeObserver.observe(container);
+    updateWidth(); // Initial measurement
+
+    return () => resizeObserver.disconnect();
+  }, []);
 
   useEffect(() => {
     if (isDragging) {
@@ -61,15 +84,24 @@ function SplitPane({ left, right, defaultSplit = 50, minSize = 200 }: SplitPaneP
   }, [isDragging]);
 
   return (
-    <div id="split-container" className="flex h-full">
-      <div style={{ width: `${split}%` }} className="flex">
+    <div id="split-container" className="flex h-full w-full">
+      <div 
+        style={{ width: `${split}%` }} 
+        className="flex min-w-0"
+      >
         {left}
       </div>
       <div
-        className="w-1 bg-border hover:bg-primary/50 cursor-col-resize transition-colors"
+        className="w-1 bg-gray-300 hover:bg-blue-500 cursor-col-resize transition-colors flex-shrink-0 relative"
         onMouseDown={handleMouseDown}
-      />
-      <div style={{ width: `${100 - split}%` }} className="flex">
+      >
+        {/* Visual indicator for the handle */}
+        <div className="absolute inset-y-0 left-1/2 transform -translate-x-1/2 w-1 bg-current opacity-50" />
+      </div>
+      <div 
+        style={{ width: `${100 - split}%` }} 
+        className="flex min-w-0"
+      >
         {right}
       </div>
     </div>
@@ -77,38 +109,61 @@ function SplitPane({ left, right, defaultSplit = 50, minSize = 200 }: SplitPaneP
 }
 
 export default function EditorPage() {
+  const router = useRouter();
   const [isConsoleCollapsed, setIsConsoleCollapsed] = useState(false);
-  const { createProject } = useProjectStore();
+  const { currentProject } = useProjectStore();
   const { addConsoleMessage } = useEditorStore();
 
   useEffect(() => {
+    // If no current project, redirect to home
+    if (!currentProject) {
+      router.push('/');
+      return;
+    }
+
     // Initialize the compiler service
     compilerService.preloadDependencies();
     
-    // Create default project
-    createProject('vanilla');
+    // Welcome message with framework info
+    const frameworkNames = {
+      vanilla: 'Vanilla JS',
+      react: 'React',
+      vue: 'Vue.js',
+      svelte: 'Svelte'
+    };
     
-    // Welcome message
     addConsoleMessage({
       type: 'success',
-      message: '🎉 Welcome to LandingAI! Start building your landing page.',
+      message: `🎉 Welcome to LandingAI! Building with ${frameworkNames[currentProject.framework]}.`,
     });
-  }, []);
+  }, [currentProject, router, addConsoleMessage]);
+
+  // Show loading or redirect if no project
+  if (!currentProject) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-gray-400">Loading project...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-screen flex flex-col bg-gray-900">
       <Header />
       
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         <SplitPane
           left={
-            <div className="flex h-full">
+            <div className="flex h-full w-full min-w-0">
               <FileExplorer />
               <CodeEditor />
             </div>
           }
           right={
-            <div className="flex flex-col h-full">
+            <div className="flex flex-col h-full w-full min-w-0">
               <PreviewFrame />
               <Console
                 isCollapsed={isConsoleCollapsed}
@@ -116,7 +171,7 @@ export default function EditorPage() {
               />
             </div>
           }
-          defaultSplit={50}
+          defaultSplit={60} // 60% for left panel (editor), 40% for right panel (preview)
           minSize={300}
         />
       </div>
