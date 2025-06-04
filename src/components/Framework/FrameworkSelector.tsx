@@ -15,25 +15,11 @@ const frameworks = [
     description: 'Pure JavaScript, HTML & CSS',
   },
   {
-    id: 'react' as FrameworkType,
-    name: 'React',
-    icon: '⚛️',
-    color: 'text-blue-500',
-    description: 'React with hooks and JSX',
-  },
-  {
     id: 'vue' as FrameworkType,
     name: 'Vue.js',
     icon: '💚',
     color: 'text-green-500',
     description: 'Vue 3 with Composition API',
-  },
-  {
-    id: 'svelte' as FrameworkType,
-    name: 'Svelte',
-    icon: '🔥',
-    color: 'text-orange-500',
-    description: 'Compiled Svelte components',
   },
 ];
 
