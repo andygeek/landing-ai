@@ -385,6 +385,9 @@ export default function OnboardingPage() {
                 prompt.trim() ? 'border-gray-600' : 'border-gray-700'
               )}
               maxLength={2000}
+              spellCheck={false}
+              data-ms-editor="true"
+              suppressHydrationWarning
             />
             <div className="mt-2 text-sm text-gray-500 text-right">
               {prompt.length}/2000 characters
