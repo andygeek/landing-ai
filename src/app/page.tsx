@@ -21,28 +21,12 @@ const frameworks = [
     features: ['No framework overhead', 'Direct DOM manipulation', 'Full control'],
   },
   {
-    id: 'react' as FrameworkType,
-    name: 'React',
-    icon: '⚛️',
-    color: 'from-blue-500 to-blue-600',
-    description: 'Component-based UI library',
-    features: ['Component reusability', 'Virtual DOM', 'Rich ecosystem'],
-  },
-  {
     id: 'vue' as FrameworkType,
     name: 'Vue.js',
     icon: '💚',
     color: 'from-green-500 to-green-600',
     description: 'Progressive JavaScript framework',
     features: ['Reactive data binding', 'Easy learning curve', 'Flexible architecture'],
-  },
-  {
-    id: 'svelte' as FrameworkType,
-    name: 'Svelte',
-    icon: '🔥',
-    color: 'from-orange-500 to-red-500',
-    description: 'Compiler-based framework',
-    features: ['No virtual DOM', 'Smaller bundle size', 'Built-in reactivity'],
   },
 ];
 
