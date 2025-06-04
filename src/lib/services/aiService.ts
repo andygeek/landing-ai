@@ -19,30 +19,14 @@ export class AIService {
 
   setApiKey(apiKey: string) {
     this.apiKey = apiKey;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('ai_api_key', apiKey);
-    }
   }
 
   getApiKey(): string | null {
-    if (this.apiKey) return this.apiKey;
-    
-    if (typeof window !== 'undefined') {
-      const storedKey = localStorage.getItem('ai_api_key');
-      if (storedKey) {
-        this.apiKey = storedKey;
-        return storedKey;
-      }
-    }
-    
-    return null;
+    return this.apiKey;
   }
 
   clearApiKey() {
     this.apiKey = null;
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('ai_api_key');
-    }
   }
 
   async generateLandingPage(
