@@ -361,7 +361,7 @@ export default function OnboardingPage() {
               <p className="mt-2 text-sm text-red-400">{apiKeyError}</p>
             )}
             <p className="mt-2 text-xs text-gray-500">
-              Your API key is stored locally in your browser and only used to communicate with the {selectedCompany === 'google' ? 'Google' : 'OpenAI'} API.
+              Your API key is kept only in memory during this session and used solely to communicate with the {selectedCompany === 'google' ? 'Google' : 'OpenAI'} API.
             </p>
           </div>
         </div>
