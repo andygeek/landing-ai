@@ -45,54 +45,33 @@ export async function POST(request: NextRequest) {
 
 async function compileReact(files: Record<string, ProjectFile>) {
   try {
-    // For React, we can use Babel to transform JSX
-    
     const htmlFile = files['index.html'];
-    const cssFile = files['style.css'];
-    const jsFile = files['script.js'];
+    if (!htmlFile) throw new Error('index.html is required');
 
-    if (!htmlFile || !jsFile) {
-      throw new Error('index.html and script.js are required');
-    }
+    const cssFile = Object.values(files).find(f => f.name.endsWith('.css'));
+    const jsxFile = Object.values(files).find(f => f.name.endsWith('.jsx') || f.name.endsWith('.tsx') || f.name.endsWith('.js'));
+    if (!jsxFile) throw new Error('No React entry file found');
 
     let html = htmlFile.content;
 
-    // Inject CSS
     if (cssFile) {
-      html = html.replace(
-        '<link rel="stylesheet" href="style.css">',
-        `<style>${cssFile.content}</style>`
-      );
+      html = html.replace('<link rel="stylesheet" href="style.css">', `<style>${cssFile.content}</style>`);
     }
 
-    // Transform JSX with Babel
+    let transformedCode = jsxFile.content;
     try {
-      const transformedCode = Babel.transform(jsFile.content, {
-        presets: ['react'],
-      }).code;
+      transformedCode = Babel.transform(jsxFile.content, { presets: ['react'] }).code || jsxFile.content;
+    } catch {}
 
-      html = html.replace(
-        '<script type="text/babel" src="script.js"></script>',
-        `<script>${transformedCode}</script>`
-      );
-    } catch {
-      // Fallback to untransformed code
-      html = html.replace(
-        '<script type="text/babel" src="script.js"></script>',
-        `<script type="text/babel">${jsFile.content}</script>`
-      );
-    }
+    html = html.replace(`<script type="module" src="${jsxFile.name}"></script>`, `<script>${transformedCode}</script>`);
 
-    return NextResponse.json({
-      success: true,
-      html,
-    });
+    return NextResponse.json({ success: true, html });
   } catch (error) {
     return NextResponse.json({
       success: false,
       error: {
         message: error instanceof Error ? error.message : 'React compilation failed',
-        file: 'script.js',
+        file: 'index.html',
       },
     });
   }
@@ -100,43 +79,41 @@ async function compileReact(files: Record<string, ProjectFile>) {
 
 async function compileVue(files: Record<string, ProjectFile>) {
   try {
-    // For Vue SFC compilation, we would use @vue/compiler-sfc
-    // For this demo, we'll handle template compilation
     const htmlFile = files['index.html'];
-    const cssFile = files['style.css'];
-    const jsFile = files['script.js'];
+    if (!htmlFile) throw new Error('index.html is required');
 
-    if (!htmlFile || !jsFile) {
-      throw new Error('index.html and script.js are required');
-    }
+    const cssFile = Object.values(files).find(f => f.name.endsWith('.css'));
+    const vueFile = Object.values(files).find(f => f.name.endsWith('.vue'));
+    const jsFile = Object.values(files).find(f => f.name.endsWith('.js'));
+
+    if (!vueFile && !jsFile) throw new Error('No Vue entry file found');
 
     let html = htmlFile.content;
-
-    // Inject CSS
     if (cssFile) {
-      html = html.replace(
-        '<link rel="stylesheet" href="style.css">',
-        `<style>${cssFile.content}</style>`
-      );
+      html = html.replace('<link rel="stylesheet" href="style.css">', `<style>${cssFile.content}</style>`);
     }
 
-    // For single file components, we would compile here
-    // For now, just inject the script
-    html = html.replace(
-      '<script src="script.js"></script>',
-      `<script>${jsFile.content}</script>`
-    );
+    let code = '';
+    if (vueFile) {
+      const templateMatch = vueFile.content.match(/<template>([\s\S]*?)<\/template>/);
+      const scriptMatch = vueFile.content.match(/<script[^>]*>([\s\S]*?)<\/script>/);
+      const template = templateMatch ? templateMatch[1].trim().replace(/`/g, '\\`') : '';
+      let script = scriptMatch ? scriptMatch[1].trim() : 'export default {}';
+      script = script.replace('export default', 'const App =');
+      code = `${script}\nApp.template=\`${template}\`;\nVue.createApp(App).mount('#app');`;
+    } else if (jsFile) {
+      code = jsFile.content;
+    }
 
-    return NextResponse.json({
-      success: true,
-      html,
-    });
+    html = html.replace(`<script src="${vueFile ? vueFile.name : jsFile!.name}"></script>`, `<script>${code}</script>`);
+
+    return NextResponse.json({ success: true, html });
   } catch (error) {
     return NextResponse.json({
       success: false,
       error: {
         message: error instanceof Error ? error.message : 'Vue compilation failed',
-        file: 'script.js',
+        file: 'index.html',
       },
     });
   }
@@ -144,42 +121,38 @@ async function compileVue(files: Record<string, ProjectFile>) {
 
 async function compileSvelte(files: Record<string, ProjectFile>) {
   try {
-    // For real Svelte compilation, we would use the Svelte compiler
-    // For this demo, we'll simulate it
     const htmlFile = files['index.html'];
-    const cssFile = files['style.css'];
-    const jsFile = files['script.js'];
+    if (!htmlFile) throw new Error('index.html is required');
 
-    if (!htmlFile || !jsFile) {
-      throw new Error('index.html and script.js are required');
-    }
+    const cssFile = Object.values(files).find(f => f.name.endsWith('.css'));
+    const svelteFile = Object.values(files).find(f => f.name.endsWith('.svelte'));
+    const jsFile = Object.values(files).find(f => f.name.endsWith('.js'));
+
+    if (!svelteFile && !jsFile) throw new Error('No Svelte entry file found');
 
     let html = htmlFile.content;
-
-    // Inject CSS
     if (cssFile) {
-      html = html.replace(
-        '<link rel="stylesheet" href="style.css">',
-        `<style>${cssFile.content}</style>`
-      );
+      html = html.replace('<link rel="stylesheet" href="style.css">', `<style>${cssFile.content}</style>`);
     }
 
-    // Simulate Svelte compilation
-    html = html.replace(
-      '<script src="script.js"></script>',
-      `<script>${jsFile.content}</script>`
-    );
+    let code = '';
+    if (svelteFile) {
+      const { compile } = await import('svelte/compiler');
+      const compiled = compile(svelteFile.content, { format: 'esm' });
+      code = `${compiled.js.code}\nconst app = new App({ target: document.getElementById('app') });`;
+    } else if (jsFile) {
+      code = jsFile.content;
+    }
 
-    return NextResponse.json({
-      success: true,
-      html,
-    });
+    html = html.replace(`<script src="${svelteFile ? 'main.js' : jsFile!.name}"></script>`, `<script>${code}</script>`);
+
+    return NextResponse.json({ success: true, html });
   } catch (error) {
     return NextResponse.json({
       success: false,
       error: {
         message: error instanceof Error ? error.message : 'Svelte compilation failed',
-        file: 'script.js',
+        file: 'index.html',
       },
     });
   }

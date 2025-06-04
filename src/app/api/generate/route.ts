@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { GoogleGenAI } from '@google/genai';
 import { FrameworkType } from '@/lib/types';
+import { initFrameworkProject } from '@/lib/services/frameworkInitService';
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,23 +31,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Definimos el prompt del sistema
-    const systemPrompt = `You are a code assistant that generates landing page files. Generate the files for a landing page based on the user's requirements using the ${framework} framework.
+    // Initialize base project to get file list
+    const initResult = initFrameworkProject(framework);
+    const fileList = initResult.files.join(', ');
 
-Return ONLY a valid JSON object in this exact format:
-{
-  "index.html": "html code here",
-  "style.css": "css code here",
-  "script.js": "javascript code here"
-}
-
-Framework-specific requirements:
-- For vanilla: Use pure HTML, CSS, and JavaScript
-- For react: Include React CDN links and use JSX with Babel standalone
-- For vue: Include Vue 3 CDN and use Options API or Composition API
-- For svelte: Generate Svelte-compatible vanilla JS (since we can't compile .svelte files client-side)
-
-Make the landing page modern, responsive, and professional.`;
+    // System prompt includes initialized file list
+    const systemPrompt = `You are a code assistant that generates landing page files. A base project using ${framework} has been created with these files: ${fileList}. Replace the contents of these files to implement the user's landing page requirements. Return ONLY a valid JSON object where keys are the file paths and values are the new file contents. Use JSX for React (.jsx), single-file components for Vue (.vue) and Svelte (.svelte). The page must remain fully functional.`;
 
     let generatedFiles: Record<string, string> = {};
     if (company === 'google') {
